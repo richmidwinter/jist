@@ -1,0 +1,9 @@
+logging: # Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+  loggers:
+    io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper: DEBUG
+  appenders:
+    - type: console
+    
+server:
+  rootPath: '/api/*'

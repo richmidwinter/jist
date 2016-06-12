@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>jist</title>
+    <link class="codestyle" rel="stylesheet" href="codemirror.css">
+    <link rel="stylesheet" href="mdn-like.css">
+    <link href="style.css" rel="stylesheet" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="codemirror-compressed.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>jist</h1>
+      <div id="icons">
+      	<button id="new">New</button>
+        <button id="execute">Execute</button>
+      </div>
+      <div class="clear"></div>
+    </header>
+    <div id="content">
+      <div>
+    <textarea id="code">
+
+</textarea>
+	  </div>
+
+	  <div>
+	      <pre id="result">
+	      </pre>
+      </div>
+
+    </div>
+
+    <footer>
+    </footer>
+
+    <script>
+    var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+      lineNumbers: true,
+      matchBrackets: true,
+      mode: "text/x-java",
+      theme: "mdn-like"
+    });
+    
+    var id = location.search.match(/id=(\w+)/);
+    if (id) { // If there is an ID, retrieve source from server.
+      id = id[1];
+      $.ajax({
+    	  url: '/api/read/' +id,
+    	  success: function(data) {
+    		editor.getDoc().setValue(data);
+      	  },
+      	  error: function(XMLHttpRequest, textStatus, errorThrown) {
+      	    if (XMLHttpRequest.status === 404) {
+      	    	editor.getDoc().setValue('\
+\n\
+// Entry class must be called Main\n\
+public class Main {\n\
+\n\
+  public static void main(String[] args) {\n\
+	for (int i = 1; i<16; i++) {\n\
+      	System.out.print(String.format("%02d", i) +": ");\n\
+\n\
+		if (i % 3 == 0) {\n\
+          System.out.print("fuzzy");\n\
+        }\n\
+\n\
+      	if (i % 5 == 0) {\n\
+          System.out.print("duck");\n\
+        }\n\
+\n\
+      	System.out.println();\n\
+    }\n\
+  }\n\
+}\n\
+\n\
+\n\
+');
+      	    }
+      	  }
+      });
+    } else { // If there's no ID, set one.
+      id = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 7);
+    
+      window.location.href = "/?id=" +id;
+    }
+
+    $('button#execute').click(function() {
+      $('pre#result').val('');
+
+      var req = $.ajax({
+        url: "/api/execute/" +id,
+        type: "POST",
+        data: editor.getValue()
+      });
+
+      req.done(function(response, textStatus, jqXHR) {
+        $('pre#result').text('$ javac Main && java Main\n' +response);
+        $('pre#result').scrollTop($('pre#result').height())
+      });
+    });
+    
+    $('button#new').click(function() {
+      window.location.href= '/';
+    });
+  	//# sourceURL=index.html.js 
+    </script>
+  </body>
+</html>
